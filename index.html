@@ -56,6 +56,9 @@
   </p>
 
   <div class="grid">
+    <button onclick="enterFullscreen(document.documentElement)">
+  Fullscreenv2
+</button>
     <button onclick="requestGeolocation()">Geolocation</button>
     <button onclick="requestCamera()">Camera</button>
     <button onclick="requestMicrophone()">Microphone</button>
@@ -118,6 +121,23 @@
         log('Camera + Microphone denied: ' + e.message);
       }
     }
+
+    async function enterFullscreen(el) {
+  try {
+    if (el.requestFullscreen) {
+      await el.requestFullscreen();
+    } 
+    else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen();
+    } 
+    else if (el.webkitEnterFullscreen) {
+      // khusus video iOS lama
+      el.webkitEnterFullscreen();
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
 
     async function requestNotifications() {
       try {
