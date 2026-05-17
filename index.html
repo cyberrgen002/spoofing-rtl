@@ -1,4 +1,222 @@
+html
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browser Permission Prompt Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #60a5fa;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    pre {
+      background: #1f2937;
+      padding: 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Browser Permission Prompt Demo</h1>
+  <p>
+    Klik tombol di bawah untuk memicu permission prompt browser.
+    Beberapa fitur hanya bekerja di HTTPS atau localhost.
+  </p>
+
+  <div class="grid">
+    <button onclick="requestGeolocation()">Geolocation</button>
+    <button onclick="requestCamera()">Camera</button>
+    <button onclick="requestMicrophone()">Microphone</button>
+    <button onclick="requestCameraMicrophone()">Camera + Mic</button>
+    <button onclick="requestNotifications()">Notifications</button>
+    <button onclick="requestClipboardRead()">Clipboard Read</button>
+    <button onclick="requestClipboardWrite()">Clipboard Write</button>
+    <button onclick="requestMidi()">MIDI</button>
+    <button onclick="requestBluetooth()">Bluetooth</button>
+    <button onclick="requestUSB()">USB</button>
+    <button onclick="requestSerial()">Serial</button>
+    <button onclick="requestHID()">HID</button>
+    <button onclick="requestNFC()">NFC</button>
+    <button onclick="requestIdleDetection()">Idle Detection</button>
+    <button onclick="requestStorage()">Persistent Storage</button>
+    <button onclick="requestPointerLock()">Pointer Lock</button>
+    <button onclick="requestFullscreen()">Fullscreen</button>
+    <button onclick="requestOrientation()">Device Orientation (iOS)</button>
+    <button onclick="requestMotion()">Device Motion (iOS)</button>
+  </div>
+
+  <pre id="log"></pre>
+
+  <script>
+    const log = (msg) => {
+      document.getElementById('log').textContent += msg + "\n";
+      console.log(msg);
+    };
+
+    async function requestGeolocation() {
+      navigator.geolocation.getCurrentPosition(
+        pos => log('Geolocation granted'),
+        err => log('Geolocation denied: ' + err.message)
+      );
+    }
+
+    async function requestCamera() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        log('Camera granted');
+      } catch (e) {
+        log('Camera denied: ' + e.message);
+      }
+    }
+
+    async function requestMicrophone() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        log('Microphone granted');
+      } catch (e) {
+        log('Microphone denied: ' + e.message);
+      }
+    }
+
+    async function requestCameraMicrophone() {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        log('Camera + Microphone granted');
+      } catch (e) {
+        log('Camera + Microphone denied: ' + e.message);
+      }
+    }
+
+    async function requestNotifications() {
+      try {
+        const result = await Notification.requestPermission();
+        log('Notification permission: ' + result);
+      } catch (e) {
+        log(e.message);
+      }
+    }
+
+    async function requestClipboardRead() {
+      try {
+        const text = await navigator.clipboard.readText();
+        log('Clipboard read success: ' + text);
+      } catch (e) {
+        log('Clipboard read denied: ' + e.message);
+      }
+    }
+
+    async function requestClipboardWrite() {
+      try {
+        await navigator.clipboard.writeText('Hello from permission demo');
+        log('Clipboard write success');
+      } catch (e) {
+        log('Clipboard write denied: ' + e.message);
+      }
+    }
+
+    async function requestMidi() {
+      try {
+        await navigator.requestMIDIAccess({ sysex: true });
+        log('MIDI granted');
+      } catch (e) {
+        log('MIDI denied: ' + e.message);
+      }
+    }
+
+    async function requestBluetooth() {
+      try {
+        await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true
+        });
+        log('Bluetooth granted');
+      } catch (e) {
+        log('Bluetooth denied: ' + e.message);
+      }
+    }
+
+    async function requestUSB() {
+      try {
+        await navigator.usb.requestDevice({ filters: [] });
+        log('USB granted');
+      } catch (e) {
+        log('USB denied: ' + e.message);
+      }
+    }
+
+    async function requestSerial() {
+      try {
+        await navigator.serial.requestPort();
+        log('Serial granted');
+      } catch (e) {
+        log('Serial denied: ' + e.message);
+      }
+    }
+
+    async function requestHID() {
+      try {
+        await navigator.hid.requestDevice({ filters: [] });
+        log('HID granted');
+      } catch (e) {
+        log('HID denied: ' + e.message);
+      }
+    }
+
+    async function requestNFC() {
+      try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        log('NFC granted');
+      } catch (e) {
+        log('NFC denied: ' + e.message);
+      }
+    }
+
+    async function requestIdleDetection() {
+      try {
+        if ('IdleDetector' in window) {
+          await IdleDetector.requestPermission();
+          log('Idle Detection granted');
+        } else {
+          log('IdleDetector not supported');
+        }
+      } catch (e) {
+        log('Idle Detection denied: ' + e.message);
+      }
+    }
+
+    async function requestStorage() {
       try {
         const granted = await navigator.storage.persist();
         log('Persistent Storage: ' + granted);
