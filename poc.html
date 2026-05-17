@@ -1,264 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>iOS Fullscreen Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scroll Page</title>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<style>
 
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      overflow: hidden;
-    }
+body{
+    height:3000px;
+    font-family:sans-serif;
+    margin:0;
+}
 
-    .app {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 20px;
-      transition: 0.3s;
-    }
+#topLogo{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:70px;
+    background:white;
+    display:none;
+    text-align:center;
+    z-index:9999;
+    border-bottom:1px solid #ddd;
+}
 
-    h1 {
-      font-size: 32px;
-    }
+#topLogo img{
+    height:40px;
+    margin-top:15px;
+}
 
-    p {
-      opacity: 0.8;
-    }
 
-    button {
-      padding: 14px 22px;
-      border: none;
-      border-radius: 12px;
-      background: #2563eb;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
+#loginPage{
+    position:absolute;
+    left:0;
+    width:100%;
+    background:white;
+    display:none;
+    padding-top:100px;
+}
 
-    button:hover {
-      background: #1d4ed8;
-    }
+.login-box{
+    width:90%;
+    max-width:420px;
+    margin:auto;
+    text-align:center;
+}
 
-    .fake-fullscreen {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000;
-      z-index: 999999;
-    }
+input{
+    width:100%;
+    padding:14px;
+    margin:10px 0;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:16px;
+}
 
-    .status {
-      margin-top: 10px;
-      padding: 10px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      width: 90%;
-      max-width: 700px;
-      word-break: break-word;
-    }
+button{
+    width:100%;
+    padding:14px;
+    margin-top:10px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+}
 
-    video {
-      width: 300px;
-      border-radius: 12px;
-    }
-  </style>
+</style>
 </head>
+
 <body>
 
-  <div class="app" id="app">
-    <h1>iOS Fullscreen Demo</h1>
+<h1 style="padding:20px;">scroll up and scroll down until the omnibox disappears (do it before 6 seconds)</h1>
 
-    <p>
-      Support:
-      Android ✅
-      Desktop ✅
-      iOS Safari ⚠️
-    </p>
+<div id="topLogo">
+<img src="fake-google.jpg" style="width: 100%; height: 70px;">
+</div>
 
-    <button id="fullscreenBtn">
-      Enter Fullscreen
-    </button>
+<div id="loginPage">
+<div class="login-box">
 
-    <button id="cssFullscreenBtn">
-      CSS Fake Fullscreen
-    </button>
+<h2>Spoof Omnibox!!!!!  </h2>
 
-    <button id="exitBtn">
-      Exit Fullscreen
-    </button>
+</div>
+</div>
 
-    <video
-      id="video"
-      controls
-      playsinline
-      webkit-playsinline
-    >
-      <source
-        src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-        type="video/mp4"
-      />
-    </video>
+<script>
 
-    <button id="videoFullscreenBtn">
-      Video Fullscreen (iOS Compatible)
-    </button>
+let startY = 0;
+let blockUp = false;
 
-    <div class="status" id="status">
-      Waiting...
-    </div>
-  </div>
+setTimeout(function(){
 
-  <script>
-    const app = document.getElementById('app');
-    const statusBox = document.getElementById('status');
-    const video = document.getElementById('video');
+    blockUp = true;
 
-    function log(message) {
-      console.log(message);
-      statusBox.innerHTML = message;
-    }
+    let login = document.getElementById("loginPage");
+    let logo = document.getElementById("topLogo");
 
-    async function enterFullscreen(element) {
-      try {
+    login.style.top = window.scrollY + "px";
+    login.style.display = "block";
 
-        // Standard Fullscreen API
-        if (element.requestFullscreen) {
-          await element.requestFullscreen();
-          log('Standard Fullscreen API');
+    logo.style.display = "block";
 
-        // Safari old API
-        } else if (element.webkitRequestFullscreen) {
-          element.webkitRequestFullscreen();
-          log('webkitRequestFullscreen');
+},5000);
 
-        // Firefox
-        } else if (element.mozRequestFullScreen) {
-          element.mozRequestFullScreen();
-          log('mozRequestFullScreen');
 
-        // IE/Edge old
-        } else if (element.msRequestFullscreen) {
-          element.msRequestFullscreen();
-          log('msRequestFullscreen');
+document.addEventListener("touchstart", function(e){
+    startY = e.touches[0].clientY;
+}, {passive:false});
 
-        } else {
-          log('Fullscreen API not supported');
-        }
+document.addEventListener("touchmove", function(e){
 
-      } catch (err) {
-        log('Fullscreen Error: ' + err.message);
-      }
-    }
+    if(!blockUp) return;
 
-    async function exitFullscreen() {
-      try {
+    e.preventDefault();
 
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
+}, {passive:false});
 
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
 
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-        }
+document.addEventListener("wheel", function(e){
 
-        app.classList.remove('fake-fullscreen');
+    if(!blockUp) return;
 
-        log('Exited fullscreen');
+    e.preventDefault();
 
-      } catch (err) {
-        log(err.message);
-      }
-    }
+}, {passive:false});
 
-    // Fake fullscreen for iOS Safari
-    function fakeFullscreen() {
-      app.classList.add('fake-fullscreen');
-
-      // Prevent scrolling
-      document.body.style.overflow = 'hidden';
-
-      log('CSS Fake Fullscreen Enabled');
-    }
-
-    // iOS video fullscreen
-    function videoFullscreen() {
-
-      try {
-
-        // iOS Safari video fullscreen
-        if (video.webkitEnterFullscreen) {
-          video.webkitEnterFullscreen();
-          log('iOS Video Fullscreen');
-
-        } else if (video.requestFullscreen) {
-          video.requestFullscreen();
-          log('Standard Video Fullscreen');
-
-        } else {
-          log('Video fullscreen unsupported');
-        }
-
-      } catch (e) {
-        log(e.message);
-      }
-    }
-
-    document
-      .getElementById('fullscreenBtn')
-      .addEventListener('click', () => {
-        enterFullscreen(document.documentElement);
-      });
-
-    document
-      .getElementById('cssFullscreenBtn')
-      .addEventListener('click', fakeFullscreen);
-
-    document
-      .getElementById('exitBtn')
-      .addEventListener('click', exitFullscreen);
-
-    document
-      .getElementById('videoFullscreenBtn')
-      .addEventListener('click', videoFullscreen);
-
-    // Detect fullscreen state
-    document.addEventListener('fullscreenchange', () => {
-
-      if (document.fullscreenElement) {
-        log('Now in fullscreen mode');
-      } else {
-        log('Exited fullscreen mode');
-      }
-
-    });
-
-    // iOS detection
-    const isiOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-      !window.MSStream;
-
-    if (isiOS) {
-      log('Detected iOS Safari');
-    } else {
-      log('Non-iOS browser detected');
-    }
-  </script>
+</script>
 
 </body>
 </html>
