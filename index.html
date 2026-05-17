@@ -1,230 +1,61 @@
-
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Ultimate Browser & PWA Permission Lab</title>
-<style>
-body { font-family: Arial, sans-serif; padding: 20px; }
-h2 { margin-top: 30px; }
-button { margin: 4px 0; padding: 10px; width: 420px; text-align: left; }
-video { max-width: 360px; display:block; margin-top:10px; }
-.note { font-size: 12px; color: #555; margin-left: 8px; }
-</style>
-</head>
-<body>
-<h1>Ultimate Browser & PWA Permission Test Lab</h1>
+      try {
+        const granted = await navigator.storage.persist();
+        log('Persistent Storage: ' + granted);
+      } catch (e) {
+        log('Persistent Storage denied: ' + e.message);
+      }
+    }
 
-<h2>Rendering & Media</h2>
-<button onclick="dataUri()">Data URI Rendering</button>
-<button onclick="blobRender()">Blob Rendering</button>
-<button onclick="pip()">Picture-in-Picture</button>
-<button onclick="autoplaySound()">Autoplay (Sound)</button>
-<button onclick="autoplayMuted()">Autoplay (Muted)</button>
-<button onclick="audioOutput()">Audio Output Selection</button>
+    async function requestPointerLock() {
+      try {
+        document.body.requestPointerLock();
+        log('Pointer Lock requested');
+      } catch (e) {
+        log('Pointer Lock denied: ' + e.message);
+      }
+    }
 
-<h2>System & UX</h2>
-<button onclick="fullscreen()">Fullscreen</button>
-<button onclick="popup()">Pop-up</button>
-<button onclick="notify()">Notifications (Push API)</button>
-<button onclick="wakeLock()">Wake Lock (screen stays on)</button>
-<button onclick="visibility()">Page Visibility / Lifecycle</button>
+    async function requestFullscreen() {
+      try {
+        await document.documentElement.requestFullscreen();
+        log('Fullscreen granted');
+      } catch (e) {
+        log('Fullscreen denied: ' + e.message);
+      }
+    }
 
-<h2>Device & Sensors</h2>
-<button onclick="geo()">Geolocation</button>
-<button onclick="camera()">Camera</button>
-<button onclick="microphone()">Microphone</button>
-<button onclick="cameraMic()">Camera + Microphone</button>
-<button onclick="screenShare()">Screen Share</button>
-<button onclick="motion()">Device Motion (Android only)</button>
-<button onclick="vibrate()">Vibration (Android only)</button>
-<button onclick="pointerLock()">Pointer Lock</button>
+    async function requestOrientation() {
+      try {
+        if (
+          typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function'
+        ) {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          log('Orientation permission: ' + permission);
+        } else {
+          log('Orientation API not supported');
+        }
+      } catch (e) {
+        log('Orientation denied: ' + e.message);
+      }
+    }
 
-<h2>Files & Storage</h2>
-<button onclick="fileUpload()">File Upload</button>
-<button onclick="folderPicker()">Folder Picker (Desktop Chrome/Edge)</button>
-<button onclick="storageEstimate()">Storage Quota Estimate</button>
-<button onclick="persistentStorage()">Persistent Storage Permission</button>
-<button onclick="autoDownload()">Auto Download</button>
-<button onclick="multiDownload()">Multiple Downloads</button>
-
-<h2>Navigation & Redirects</h2>
-<button onclick="redirect()">Redirect Chain Test</button>
-<button onclick="redirectt()">Redirect Download</button>
-
-<h2>Communication & App Handlers</h2>
-<button onclick="mailto()">Mailto (email client)</button>
-<button onclick="tel()">Tel (Phone dialer)</button>
-<button onclick="sms()">SMS (Android only)</button>
-<button onclick="geoLink()">Geo URI</button>
-<button onclick="maps()">Google Maps / Apple Maps</button>
-<button onclick="webcal()">WebCal / Calendar</button>
-<button onclick="ics()">ICS Import</button>
-
-<h2>Payments & Crypto</h2>
-<button onclick="payment()">Payment Request API</button>
-<button onclick="ethereum()">Ethereum Wallet Detection</button>
-
-<h2>Advanced Hardware (Desktop & PWA)</h2>
-<button onclick="bluetooth()">Bluetooth</button>
-<button onclick="usb()">USB</button>
-<button onclick="serial()">Serial</button>
-<button onclick="hid()">HID</button>
-<button onclick="midi()">MIDI Access</button>
-
-<h2>Sensitive / PWA-only Features</h2>
-<button onclick="contactPicker()">Contact Picker (Android Chrome only)</button>
-<button onclick="backgroundSync()">Background Sync (PWA only)</button>
-<button onclick="orientationLock()">Orientation Lock (PWA / fullscreen)</button>
-<button onclick="mediaSession()">Media Session API (PWA only)</button>
-<button onclick="fileSystemAccess()">File System Access (desktop Chrome/Edge)</button>
-<button onclick="webShareTarget()">Web Share Target (PWA only)</button>
-<button onclick="nativeShare()">Native Share API (Android/iOS)</button>
-<button onclick="clipboardItemAPI()">Clipboard Item API (images/files)</button>
-<button onclick="webXR()">WebXR VR / AR Session</button>
-
-<p class="note">Note: Some APIs are restricted by OS or browser. Android-only, PWA-only, or Desktop Chrome/Edge only features are marked.</p>
-
-<script>
-/* Rendering */
-function dataUri() {
-  const i = document.createElement("iframe");
-  i.src = "data:text/html,<h1>Data URI Rendered</h1>";
-  document.body.appendChild(i);
-}
-function blobRender() {
-  const b = new Blob(["<h1>Blob Rendered</h1>"], { type: "text/html" });
-  window.open(URL.createObjectURL(b));
-}
-async function pip() {
-  const v = document.createElement("video");
-  v.src = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
-  v.controls = true;
-  document.body.appendChild(v);
-  await v.play();
-  if(v.requestPictureInPicture)v.requestPictureInPicture();
-}
-function autoplaySound() {
-  const v = document.createElement("video"); v.src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"; v.autoplay=true; document.body.appendChild(v);
-}
-function autoplayMuted() {
-  const v = document.createElement("video"); v.src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"; v.muted=true; v.autoplay=true; document.body.appendChild(v);
-}
-async function audioOutput(){
-  const a = new Audio();
-  if(a.setSinkId){
-    const d = await navigator.mediaDevices.enumerateDevices();
-    const out = d.find(x=>x.kind==="audiooutput");
-    if(out) await a.setSinkId(out.deviceId);
-    alert("Audio output selectable");
-  } else alert("Not supported");
-}
-
-/* System & UX */
-const fullscreen=()=>document.documentElement.requestFullscreen();
-const popup=()=>window.open("https://example.com")||alert("Popup blocked");
-const notify=()=>Notification.requestPermission().then(r=>alert("Notification permission: "+r));
-async function wakeLock(){ try{await navigator.wakeLock.request("screen");alert("Wake lock acquired"); } catch{alert("Wake lock denied");} }
-function visibility(){document.addEventListener("visibilitychange",()=>alert("Visibility: "+document.visibilityState)); alert("Switch tabs to test");}
-
-/* Sensors */
-const geo=()=>navigator.geolocation.getCurrentPosition(p=>alert("Lat: "+p.coords.latitude+" Lon: "+p.coords.longitude),e=>alert("Geolocation denied"));
-const camera=()=>navigator.mediaDevices.getUserMedia({video:true}).then(stop).catch(()=>alert("Camera denied"));
-const microphone=()=>navigator.mediaDevices.getUserMedia({audio:true}).then(stop).catch(()=>alert("Mic denied"));
-const cameraMic=()=>navigator.mediaDevices.getUserMedia({video:true,audio:true}).then(stop).catch(()=>alert("Camera/Mic denied"));
-const screenShare=()=>navigator.mediaDevices.getDisplayMedia({video:true}).then(stop).catch(()=>alert("Screen share denied"));
-function motion(){DeviceMotionEvent?.requestPermission?.().then(r=>alert("Motion: "+r))||alert("Motion auto-granted / Android only");}
-const vibrate=()=>navigator.vibrate?.([200,100,200]);
-const pointerLock=()=>document.body.requestPointerLock();
-
-/* Files & Storage */
-const fileUpload=()=>Object.assign(document.createElement("input"),{type:"file"}).click();
-const folderPicker=async()=>window.showDirectoryPicker?await showDirectoryPicker():alert("Folder picker not supported");
-const storageEstimate=async()=>alert(JSON.stringify(await navigator.storage.estimate()));
-const persistentStorage=()=>navigator.storage.persist().then(r=>alert("Persistent storage: "+r));
-function autoDownload(){const a=document.createElement("a");a.href="data:text/plain,download";a.download="auto.txt";a.click();}
-function multiDownload(){for(let i=0;i<3;i++)autoDownload();}
-
-/* Navigation */
-const redirect=()=>location.href="https://www.google.com/url?q=https://ybt01.github.io/upload/app-debug.apk&sa=D&source=buganizer&usg=AOvVaw3nm-qJSzcGfjAOwSO0tcBK";
-const redirectt=()=>location.href="https://barathstalin6.github.io/summa/newpipe.apk";
-
-/* Communication & Handlers */
-const mailto=()=>location.href="mailto:test@example.com";
-const tel=()=>location.href="tel:+12125551234";
-const sms=()=>location.href="sms:+12125551234";
-const geoLink=()=>location.href="geo:37.7749,-122.4194";
-const maps=()=>window.open("https://maps.google.com");
-const webcal=()=>location.href="webcal://example.com/test.ics";
-function ics(){const a=document.createElement("a");a.href="data:text/calendar,BEGIN:VCALENDAR\nEND:VCALENDAR";a.download="event.ics";a.click();}
-
-/* Payments & Crypto */
-function payment(){
-  if(!window.PaymentRequest)return alert("No PaymentRequest API");
-  new PaymentRequest([{supportedMethods:"basic-card"}],{total:{label:"Test",amount:{currency:"USD",value:"1"}}}).show().then(r=>r.complete("success"));
-}
-const ethereum=()=>alert(window.ethereum?"Ethereum Wallet detected":"No wallet");
-
-/* Advanced Hardware */
-const bluetooth=async()=>navigator.bluetooth?.requestDevice({acceptAllDevices:true}).then(()=>alert("Bluetooth granted")).catch(()=>alert("Bluetooth denied"));
-const usb=async()=>navigator.usb?.requestDevice({filters:[]}).then(()=>alert("USB granted")).catch(()=>alert("USB denied"));
-const serial=async()=>navigator.serial?.requestPort().then(()=>alert("Serial granted")).catch(()=>alert("Serial denied"));
-const hid=async()=>navigator.hid?.requestDevice({filters:[]}).then(()=>alert("HID granted")).catch(()=>alert("HID denied"));
-const midi=()=>navigator.requestMIDIAccess?.().then(()=>alert("MIDI granted")).catch(()=>alert("MIDI denied"));
-
-function stop(stream){stream.getTracks().forEach(t=>t.stop()); alert("Permission granted");}
-
-/* Sensitive / PWA-only */
-async function contactPicker(){
-  if('contacts' in navigator && 'ContactsManager' in window){
-    const c = await navigator.contacts.select(['name','email','tel'],{multiple:true});
-    alert("Contacts selected: "+JSON.stringify(c));
-  } else alert("Contact Picker not supported / Android Chrome only");
-}
-
-async function backgroundSync(){
-  if('serviceWorker' in navigator){
-    const reg = await navigator.serviceWorker.ready;
-    if(reg.sync) alert("Background Sync available (PWA only)"); else alert("Not supported");
-  } else alert("Service Worker not supported");
-}
-
-function orientationLock(){
-  if(screen.orientation && screen.orientation.lock) screen.orientation.lock("portrait").then(()=>alert("Orientation locked")).catch(()=>alert("Denied / PWA only"));
-  else alert("Orientation Lock not supported");
-}
-
-function mediaSession(){
-  if('mediaSession' in navigator) alert("Media Session API supported (PWA only)"); else alert("Media Session API not supported");
-}
-
-async function fileSystemAccess(){
-  if(window.showOpenFilePicker || window.showDirectoryPicker) alert("File System Access API supported"); else alert("Not supported / Desktop Chrome/Edge only");
-}
-
-function webShareTarget(){
-  if(navigator.canShare) alert("Web Share Target API supported (PWA only)"); else alert("Not supported");
-}
-
-async function nativeShare(){
-  if(navigator.share) navigator.share({title:"Test Share", text:"Testing Native Share", url:window.location.href}).catch(()=>alert("Share cancelled or denied")); 
-  else alert("Native Share API not supported / Android/iOS only");
-}
-
-async function clipboardItemAPI(){
-  if(navigator.clipboard?.read){
-    try{
-      const items = await navigator.clipboard.read();
-      alert("Clipboard Item API available. Items count: "+items.length);
-    }catch(e){alert("Permission denied or not supported");}
-  } else alert("Clipboard Item API not supported");
-}
-
-async function webXR(){
-  if(navigator.xr){
-    navigator.xr.isSessionSupported('immersive-vr').then(vr=>navigator.xr.isSessionSupported('immersive-ar').then(ar=>alert("VR supported: "+vr+", AR supported: "+ar)));
-  } else alert("WebXR not supported");
-}
-</script>
+    async function requestMotion() {
+      try {
+        if (
+          typeof DeviceMotionEvent !== 'undefined' &&
+          typeof DeviceMotionEvent.requestPermission === 'function'
+        ) {
+          const permission = await DeviceMotionEvent.requestPermission();
+          log('Motion permission: ' + permission);
+        } else {
+          log('Motion API not supported');
+        }
+      } catch (e) {
+        log('Motion denied: ' + e.message);
+      }
+    }
+  </script>
 </body>
 </html>
