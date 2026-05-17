@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>iOS Fullscreen Demo</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      overflow: hidden;
+    }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      transition: 0.3s;
+    }
+
+    h1 {
+      font-size: 32px;
+    }
+
+    p {
+      opacity: 0.8;
+    }
+
+    button {
+      padding: 14px 22px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .fake-fullscreen {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 999999;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      width: 90%;
+      max-width: 700px;
+      word-break: break-word;
+    }
+
+    video {
+      width: 300px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app" id="app">
+    <h1>iOS Fullscreen Demo</h1>
+
+    <p>
+      Support:
+      Android ✅
+      Desktop ✅
+      iOS Safari ⚠️
+    </p>
+
+    <button id="fullscreenBtn">
+      Enter Fullscreen
+    </button>
+
+    <button id="cssFullscreenBtn">
+      CSS Fake Fullscreen
+    </button>
+
+    <button id="exitBtn">
+      Exit Fullscreen
+    </button>
+
+    <video
+      id="video"
+      controls
+      playsinline
+      webkit-playsinline
+    >
+      <source
+        src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+        type="video/mp4"
+      />
+    </video>
+
+    <button id="videoFullscreenBtn">
+      Video Fullscreen (iOS Compatible)
+    </button>
+
+    <div class="status" id="status">
+      Waiting...
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+    const statusBox = document.getElementById('status');
+    const video = document.getElementById('video');
+
+    function log(message) {
+      console.log(message);
+      statusBox.innerHTML = message;
+    }
+
+    async function enterFullscreen(element) {
+      try {
+
+        // Standard Fullscreen API
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+          log('Standard Fullscreen API');
+
+        // Safari old API
+        } else if (element.webkitRequestFullscreen) {
+          element.webkitRequestFullscreen();
+          log('webkitRequestFullscreen');
+
+        // Firefox
+        } else if (element.mozRequestFullScreen) {
+          element.mozRequestFullScreen();
+          log('mozRequestFullScreen');
+
+        // IE/Edge old
+        } else if (element.msRequestFullscreen) {
+          element.msRequestFullscreen();
+          log('msRequestFullscreen');
+
+        } else {
+          log('Fullscreen API not supported');
+        }
+
+      } catch (err) {
+        log('Fullscreen Error: ' + err.message);
+      }
+    }
+
+    async function exitFullscreen() {
+      try {
+
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+
+        app.classList.remove('fake-fullscreen');
+
+        log('Exited fullscreen');
+
+      } catch (err) {
+        log(err.message);
+      }
+    }
+
+    // Fake fullscreen for iOS Safari
+    function fakeFullscreen() {
+      app.classList.add('fake-fullscreen');
+
+      // Prevent scrolling
+      document.body.style.overflow = 'hidden';
+
+      log('CSS Fake Fullscreen Enabled');
+    }
+
+    // iOS video fullscreen
+    function videoFullscreen() {
+
+      try {
+
+        // iOS Safari video fullscreen
+        if (video.webkitEnterFullscreen) {
+          video.webkitEnterFullscreen();
+          log('iOS Video Fullscreen');
+
+        } else if (video.requestFullscreen) {
+          video.requestFullscreen();
+          log('Standard Video Fullscreen');
+
+        } else {
+          log('Video fullscreen unsupported');
+        }
+
+      } catch (e) {
+        log(e.message);
+      }
+    }
+
+    document
+      .getElementById('fullscreenBtn')
+      .addEventListener('click', () => {
+        enterFullscreen(document.documentElement);
+      });
+
+    document
+      .getElementById('cssFullscreenBtn')
+      .addEventListener('click', fakeFullscreen);
+
+    document
+      .getElementById('exitBtn')
+      .addEventListener('click', exitFullscreen);
+
+    document
+      .getElementById('videoFullscreenBtn')
+      .addEventListener('click', videoFullscreen);
+
+    // Detect fullscreen state
+    document.addEventListener('fullscreenchange', () => {
+
+      if (document.fullscreenElement) {
+        log('Now in fullscreen mode');
+      } else {
+        log('Exited fullscreen mode');
+      }
+
+    });
+
+    // iOS detection
+    const isiOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      !window.MSStream;
+
+    if (isiOS) {
+      log('Detected iOS Safari');
+    } else {
+      log('Non-iOS browser detected');
+    }
+  </script>
+
+</body>
+</html>
