@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PiP Video Player</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 800px;
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 16px;
+      background: black;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    button, input[type="file"] {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PiP Video Player</h1>
+
+    <video id="video" controls>
+      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+      Browser tidak mendukung video.
+    </video>
+
+    <div class="controls">
+      <input type="file" id="videoUpload" accept="video/*" />
+      <button id="pipBtn">Aktifkan PiP</button>
+      <button id="playBtn">Play</button>
+      <button id="pauseBtn">Pause</button>
+    </div>
+
+    <div class="status" id="status">
+      Status: Ready
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const pipBtn = document.getElementById('pipBtn');
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const upload = document.getElementById('videoUpload');
+    const statusText = document.getElementById('status');
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        video.src = url;
+        statusText.innerText = `Status: Video loaded (${file.name})`;
+      }
+    });
+
+    playBtn.addEventListener('click', async () => {
+      await video.play();
+      statusText.innerText = 'Status: Playing';
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      video.pause();
+      statusText.innerText = 'Status: Paused';
+    });
+
+    pipBtn.addEventListener('click', async () => {
+      try {
+        if (!document.pictureInPictureEnabled) {
+          alert('Browser tidak mendukung Picture-in-Picture');
+          return;
+        }
+
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+          statusText.innerText = 'Status: PiP disabled';
+        } else {
+          await video.requestPictureInPicture();
+          statusText.innerText = 'Status: PiP enabled';
+        }
+      } catch (err) {
+        console.error(err);
+        statusText.innerText = 'Status: Error activating PiP';
+      }
+    });
+
+    video.addEventListener('enterpictureinpicture', () => {
+      console.log('Entered PiP mode');
+    });
+
+    video.addEventListener('leavepictureinpicture', () => {
+      console.log('Exited PiP mode');
+    });
+  </script>
+  <hr style="margin:40px 0;border-color:#334155;">
+
+  <div style="margin-top:30px;">
+    <h2>Jenis PiP yang Didukung</h2>
+    <ul>
+      <li>Browser Picture-in-Picture API</li>
+      <li>Floating Mini Player</li>
+      <li>Always On Top Mode</li>
+      <li>YouTube Embed PiP</li>
+      <li>Custom Draggable PiP Window</li>
+      <li>Fullscreen + Mini Mode</li>
+    </ul>
+  </div>
+
+  <div style="margin-top:30px;">
+    <h2>YouTube PiP</h2>
+    <iframe
+      id="ytFrame"
+      width="100%"
+      height="400"
+      src="https://www.youtube.com/embed/jfKfPfyJRdk"
+      title="YouTube video player"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      style="border-radius:16px;">
+    </iframe>
+  </div>
+
+  <div id="floatingPlayer" style="
+    position:fixed;
+    width:320px;
+    bottom:20px;
+    right:20px;
+    background:#000;
+    border-radius:16px;
+    overflow:hidden;
+    display:none;
+    z-index:9999;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    cursor:move;
+  ">
+    <video id="floatVideo" controls muted style="width:100%;"></video>
+  </div>
+
+  <script>
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    const floatVideo = document.getElementById('floatVideo');
+
+    const miniBtn = document.createElement('button');
+    miniBtn.innerText = 'Mini Floating Player';
+    miniBtn.style.marginTop = '10px';
+    document.querySelector('.controls').appendChild(miniBtn);
+
+    miniBtn.addEventListener('click', () => {
+      floatingPlayer.style.display = 'block';
+      floatVideo.src = video.currentSrc;
+      floatVideo.currentTime = video.currentTime;
+      floatVideo.play();
+      statusText.innerText = 'Status: Floating player active';
+    });
+
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    floatingPlayer.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - floatingPlayer.offsetLeft;
+      offsetY = e.clientY - floatingPlayer.offsetTop;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      floatingPlayer.style.left = `${e.clientX - offsetX}px`;
+      floatingPlayer.style.top = `${e.clientY - offsetY}px`;
+      floatingPlayer.style.bottom = 'auto';
+      floatingPlayer.style.right = 'auto';
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    const alwaysBtn = document.createElement('button');
+    alwaysBtn.innerText = 'Always On Top';
+    document.querySelector('.controls').appendChild(alwaysBtn);
+
+    alwaysBtn.addEventListener('click', async () => {
+      try {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        }
+
+        await video.requestPictureInPicture();
+        statusText.innerText = 'Status: Always on top active';
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    const fullBtn = document.createElement('button');
+    fullBtn.innerText = 'Fullscreen';
+    document.querySelector('.controls').appendChild(fullBtn);
+
+    fullBtn.addEventListener('click', async () => {
+      if (video.requestFullscreen) {
+        await video.requestFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
