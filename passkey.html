@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Click Anywhere to Set Passkey</h1>
+
+<script>
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+addEventListener("click", async () => {
+    try {
+        console.log("Menunggu 3 detik...");
+
+        await document.documentElement.requestFullscreen();
+
+        await sleep(0);
+
+        await navigator.credentials.create({
+            publicKey: {
+                challenge: crypto.getRandomValues(new Uint8Array(32)),
+                rp: {
+                    name: "Example"
+                },
+                user: {
+                    id: crypto.getRandomValues(new Uint8Array(16)),
+                    name: "user@example.com",
+                    displayName: "User"
+                },
+                pubKeyCredParams: [
+                    {
+                        type: "public-key",
+                        alg: -7
+                    }
+                ]
+            }
+        });
+
+        console.log("Selesai");
+
+    } catch (err) {
+        console.error(err);
+    }
+});
+</script>
+
+</body>
+</html>
