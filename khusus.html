@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button id="btn">Connect Devices</button>
+
+<script>
+// USB
+navigator.usb.addEventListener("connect", (event) => {
+    console.log("USB connected:", event.device);
+});
+
+navigator.usb.addEventListener("disconnect", (event) => {
+    console.log("USB disconnected:", event.device);
+});
+
+// Serial
+navigator.serial.addEventListener("connect", (event) => {
+    console.log("Serial connected:", event.target);
+});
+
+navigator.serial.addEventListener("disconnect", (event) => {
+    console.log("Serial disconnected:", event.target);
+});
+
+// Bluetooth
+navigator.bluetooth.addEventListener?.("advertisementreceived", (event) => {
+    console.log("Bluetooth advertisement:", event);
+});
+
+// User gesture required
+document.getElementById("btn").addEventListener("click", async () => {
+
+    try {
+        // Request Serial
+        const serialPort = await navigator.serial.requestPort();
+        console.log("Serial selected:", serialPort);
+    } catch(e) {
+        console.log("Serial cancelled");
+    }
+
+    try {
+        // Request USB
+        const usbDevice = await navigator.usb.requestDevice({
+            filters: []
+        });
+        console.log("USB selected:", usbDevice);
+    } catch(e) {
+        console.log("USB cancelled");
+    }
+
+    try {
+        // Request Bluetooth
+        const btDevice = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true
+        });
+        console.log("Bluetooth selected:", btDevice);
+    } catch(e) {
+        console.log("Bluetooth cancelled");
+    }
+
+});
+</script>
+
+</body>
+</html>
