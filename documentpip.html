@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>Document PiP Kursor Canvas di Atas Mouse dengan Jarak</title>
+    <style media="screen">
+        body {
+            height: 100vh;
+            margin: 0px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+            overflow: hidden;
+        }
+        .interactive-text {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #pipBtn {
+            padding: 12px 24px;
+            font-size: 1.1em;
+            background-color: gold;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="interactive-text">Document Picture-in-Picture</div>
+    <button id="pipBtn" onclick="openDocumentPiP();">BUKA WINDOWS PIP</button>
+
+    <script type="text/javascript">
+        var rectWidth = 120;
+        var rectHeight = 30;
+        
+        // Ukuran wadah canvas dikunci di 128x128 agar aman dibaca browser
+        var canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 128; 
+        var ctx = canvas.getContext('2d');
+
+        var pipWindow = null;
+
+        async function openDocumentPiP() {
+            if ('documentPictureInPicture' in window) {
+                try {
+                    pipWindow = await window.documentPictureInPicture.requestWindow({
+                        width: 400,
+                        height: 300,
+                    });
+
+                    pipWindow.document.body.innerHTML = `
+                        <div class="pip-container">
+                            <p>Gerakkan mouse Anda di dalam jendela ini</p>
+                        </div>
+                    `;
+
+                    const style = pipWindow.document.createElement('style');
+                    style.textContent = `
+                        body {
+                            margin: 0;
+                            height: 100vh;
+                            background-color: #21252b;
+                            color: white;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            font-family: sans-serif;
+                            overflow: hidden;
+                        }
+                        .pip-container {
+                            text-align: center;
+                            font-size: 1.2em;
+                            user-select: none;
+                        }
+                    `;
+                    pipWindow.document.head.appendChild(style);
+
+                    pipWindow.document.body.addEventListener('mousemove', function() {
+                        renderPipCursor();
+                    });
+
+                    renderPipCursor();
+
+                } catch (err) {
+                    console.error("Gagal membuka Document PiP:", err);
+                }
+            } else {
+                alert("Browser Anda belum mendukung Document PiP API. Gunakan Google Chrome terbaru.");
+            }
+        }
+
+        function renderPipCursor() {
+            if (!pipWindow) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save(); 
+            
+            // Menggeser posisi vertikal kotak (rectY) ke atas (posisi 20px dari atas canvas)
+            // Ini menyisakan ruang kosong di bawah kotak untuk area gap/jarak
+            var rectX = (canvas.width - rectWidth) / 2;
+            var rectY = 20; 
+
+            // 1. Menggambar bentuk persegi panjang kursor
+            ctx.fillStyle = '#1e222b'; 
+            ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+            var centerX = rectX + (rectWidth / 2);
+            var centerY = rectY + (rectHeight / 2);
+
+            // 2. Menggambar teks di dalam kursor persegi panjang
+            ctx.fillStyle = '#00ffcc'; 
+            ctx.font = 'bold 11px sans-serif'; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle'; 
+            ctx.fillText("testing", centerX, centerY);
+            ctx.restore();
+
+            var url = canvas.toDataURL();
+            
+            // PERUBAHAN UNTUK JARAK 20px:
+            var hotX = centerX;
+            // Hotspot diletakkan di koordinat: Batas bawah kotak (rectY + rectHeight) + 20 piksel jarak kosong
+            var hotY = rectY + rectHeight + 80; 
+
+            // Pasang kursor baru ke jendela PiP
+            pipWindow.document.body.style.cursor = 'url(' + url + ') ' + hotX + ' ' + hotY + ', crosshair'; 
+        }
+    </script>
+</body>
+</html>
