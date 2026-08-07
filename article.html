@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="author" content="F28-POC-BYLINE :: THIS BYLINE CAME FROM THE ATTACKER ORIGIN">
+<title>F28-POC-TITLE :: THIS TITLE CAME FROM THE ATTACKER ORIGIN</title>
+<script>window.__F28_DEFAULT_VICTIM__ = 'https://brave-f28-victim.vercel.app/';</script>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.65 -apple-system, system-ui, sans-serif; margin: 0; padding: 20px 18px 60px; max-width: 46rem; }
+  .poc { border: 2px solid #b23; border-radius: 10px; padding: 12px 14px; margin: 0 0 22px; font-size: 14px; }
+  .poc b { color: #b23; }
+  h1 { font-size: 1.55rem; line-height: 1.25; }
+  .marker { background: #ffe8e8; color: #900; border: 2px dashed #b23; padding: 14px; border-radius: 8px; font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .marker { background:#3a1010; color:#ffb4b4; } }
+  .hop { display: block; margin: 26px 0; padding: 16px; border: 3px solid #b23; border-radius: 10px;
+         text-align: center; font-weight: 700; font-size: 1.05rem; }
+</style>
+</head>
+<body>
+
+<div class="poc">
+  <b>Security research proof-of-concept.</b> Brave bug bounty, finding F28 (Brave iOS Reader Mode).
+  Benign: stores nothing, sends nothing, collects nothing.
+  <br><br>
+  <b>Step 1 of 3.</b> The reader-mode glyph should now be visible in the URL bar.
+  <b>Tap it.</b> Then follow the instructions that appear inside the reader view.
+</div>
+
+<article>
+<h1>F28-POC-TITLE :: THIS TITLE CAME FROM THE ATTACKER ORIGIN</h1>
+<address>F28-POC-BYLINE :: THIS BYLINE CAME FROM THE ATTACKER ORIGIN</address>
+
+<p class="marker">F28-POC-BODY — IF YOU ARE READING THIS TEXT WHILE THE ADDRESS BAR SHOWS A DIFFERENT SITE, BRAVE HAS RENDERED THIS ATTACKER-AUTHORED DOCUMENT AS THAT SITE'S ARTICLE. THAT IS THE BUG.</p>
+
+<p><b>STEP 2 — you are now in reader mode on the attacker's page. Tap the large link below.</b> It navigates to an ordinary website that has no article on it. Watch the reader-mode glyph in the URL bar as you go: it will stay visible, which is already wrong.</p>
+
+<a class="hop" id="hop" href="https://brave-f28-victim.vercel.app/">STEP 2 — TAP HERE TO GO TO THE VICTIM SITE</a>
+
+<p><b>STEP 3 — once the victim page has loaded, tap the reader-mode glyph again.</b> This text will reappear, unchanged, underneath the victim's address. Nothing on that screen will name this origin.</p>
+
+<p>This page exists so that Brave for iOS will run Mozilla Readability over it and keep the parsed result. It is deliberately shaped like an article: it lives at a non-root path, it is served over https, and it carries enough prose that Readability's <code>isProbablyReaderable</code> heuristic scores it well above the threshold it needs before the reader-mode affordance is offered at all. None of that is unusual; every ordinary news article satisfies the same conditions, which is why the condition is not a meaningful barrier.</p>
+
+<p>Brave iOS keeps the parsed article for a tab in a single field on the tab helper. The parsed result is stored on its own, without the URL of the document it was parsed from recorded anywhere alongside it. When the reader-mode button is later tapped, the helper takes whatever happens to be in that field and writes it into the reader cache under the URL that is committed in the tab at that moment, then loads an internal reader page whose query parameter carries that same URL. The address bar for an internal reader page prints the URL taken out of that query parameter, so the omnibox shows the committed site while the body shows the stored article.</p>
+
+<p>Two of those steps are individually reasonable and only the combination is wrong. Caching the parsed article is a sensible optimisation, because parsing is expensive and the user may toggle reader mode on and off repeatedly. Keying the reader cache by URL is also sensible, because the cache has to be looked up again when the internal page loads. What is missing is the binding between the two: nothing ever compares the URL the article was parsed from against the URL it is being filed under, even though the parsed result carries its own URL field that would make the comparison a one-line change.</p>
+
+<p>There is a guard, and on an ordinary navigation it works. When a navigation starts, the helper clears the stored article, precisely so that the article from the previous page cannot survive into the next one. That guard, however, has an exception written into it: if the page being navigated away from is itself a reader-mode page, the clear is skipped entirely. The stated reason is that a reader-mode page can trigger sub-navigations of its own after activation, and clearing on those would break it. The exception does not distinguish a sub-navigation from a plain link to another site, so any link followed out of the reader view carries the stored article with it.</p>
+
+<p>The same exception is written a second time, in the code that decides whether to hide the reader-mode glyph while a navigation is in flight. That code also skips its work when the page being left is a reader-mode page. The two exceptions compose: the article survives, and the glyph is never even taken off the screen, so there is no moment at which the interface admits that anything changed.</p>
+
+<p>The final step needs no trickery at all. When the destination page reports back that it is not suitable for reader mode, the helper ignores the reported state and merely notifies its observer that something changed. The observer recomputes whether the glyph should be visible, and it computes that purely from whether the stored article field is non-empty. Because the field was never cleared, the answer is yes, and the glyph stays on a page that has just finished saying it has no article to show.</p>
+
+<p>The consequence is content spoofing rather than script execution. The internal reader page is served with a restrictive content security policy that permits scripts only with a per-load nonce, so markup carried in from this document does not run. What the attacker gets instead is the ability to place arbitrary prose, headings and a byline underneath another site's name, its real address-bar text, and its ordinary transport-security treatment, with nothing on the resulting page naming where the content actually came from. The reader template has no field for the source domain, so the page cannot contradict the address bar even in principle. Because the reader cache is backed by disk, the substitution also survives until the entry is replaced.</p>
+
+<p>The fix is small and Brave has already written it for the other platform. On desktop, the equivalent component was given the URL of the request it was created for and now re-checks that URL against the response before it is allowed to supply a body, with a comment stating that distilled content belongs to the page it was distilled from and must never be sent as the body of any other URL. That is exactly the invariant this page demonstrates is absent on iOS. Recording the URL next to the stored article and refusing to file it under a different one would close the whole chain, regardless of how the field came to survive.</p>
+</article>
+
+<script>
+(function () {
+  var qs = new URLSearchParams(location.search);
+  var victim = qs.get('victim') || window.__F28_DEFAULT_VICTIM__;
+  // Readability parses the LIVE DOM, so setting href here is picked up and
+  // preserved in the extracted content (verified with @mozilla/readability@0.6.0).
+  var hop = document.getElementById('hop');
+  if (hop && /^https:\/\//i.test(victim)) { hop.href = victim; }
+})();
+</script>
+</body>
+</html>
