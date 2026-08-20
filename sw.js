@@ -1,28 +1,24 @@
-const CACHE_NAME = 'pwa-install-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'pwa-test-cache-v1';
+const ASSETS = [
   'index.html',
-  'manifest.json',
-  'icon-192.png',
-  'icon-512.png'
+  'manifest.json'
 ];
 
-// Tahap Install: Menyimpan aset penting ke dalam cache lokal
-self.addEventListener('install', (event) => {
-  event.waitUntil(
+self.addEventListener('install', (e) => {
+  e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
 
-// Tahap Aktivasi: Membersihkan cache versi usang
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
           }
         })
       );
@@ -30,15 +26,11 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Tahap Fetch: Strategi Cache Utama dengan Jaringan sebagai cadangan (Offline Support)
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).catch(() => {
-        if (event.request.mode === 'navigate') {
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((res) => {
+      return res || fetch(e.request).catch(() => {
+        if (e.request.mode === 'navigate') {
           return caches.match('index.html');
         }
       });
