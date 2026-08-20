@@ -3,30 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA Pertamaku</title>
-    <!-- Menghubungkan ke Manifest -->
+    <title>PWA Siap Instal</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#007bff">
+    <meta name="theme-color" content="#4f46e5">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f9; }
-        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0; padding: 0; background: #f3f4f6;
+            display: flex; align-items: center; justify-content: center; min-height: 100vh;
+        }
+        .container {
+            background: white; padding: 2.5rem; border-radius: 16px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 90%;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #111827; }
+        p { color: #4b5563; font-size: 0.95rem; margin-bottom: 2rem; }
+        .btn-install {
+            background: #4f46e5; color: white; border: none; padding: 0.75rem 1.5rem;
+            font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; width: 100%;
+            display: none; /* Tombol disembunyikan secara default */
+        }
+        .btn-install:hover { background: #4338ca; }
+        .status { margin-top: 1rem; font-size: 0.85rem; color: #9ca3af; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Halo! Ini PWA Buatan Saya 🎉</h1>
-        <p>Jika syarat terpenuhi, tombol instal akan muncul di browser Anda.</p>
-        <button onclick="alert('PWA Berjalan!')">Klik Saya</button>
+
+    <div class="container">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
+        <h1>PWA Siap Instal Anda!</h1>
+        <p>Gunakan tombol di bawah ini atau cari ikon instalasi pada bilah alamat browser untuk memasangnya sebagai aplikasi mandiri.</p>
+        
+        <!-- Tombol pemicu kustom -->
+        <button id="installBtn" class="btn-install">Pasang Aplikasi</button>
+        
+        <div id="statusText" class="status">Memeriksa dukungan PWA...</div>
     </div>
 
-    <!-- Mendaftarkan Service Worker -->
     <script>
+        const installBtn = document.getElementById('installBtn');
+        const statusText = document.getElementById('statusText');
+        let deferredPrompt;
+
+        // 1. Registrasi Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Service Worker Terdaftar!'))
-                .catch(err => console.log('Pendaftaran Gagal:', err));
+                .then(() => statusText.textContent = 'Service Worker aktif.')
+                .catch(() => statusText.textContent = 'Gagal memuat Service Worker.');
+        } else {
+            statusText.textContent = 'Browser tidak mendukung Service Worker.';
         }
+
+        // 2. Menangkap event ketersediaan instalasi dari browser
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Cegah prompt otomatis bawaan browser
+            deferredPrompt = e;  // Simpan event ke variabel
+            
+            installBtn.style.display = 'block'; // Tampilkan tombol kustom kita
+            statusText.textContent = 'Aplikasi siap diinstal!';
+        });
+
+        // 3. Eksekusi instalasi saat tombol diklik
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            
+            deferredPrompt.prompt(); // Tampilkan kotak dialog instalasi
+            
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`Pilihan user: ${outcome}`);
+            
+            deferredPrompt = null; // Reset prompt (hanya bisa dipakai 1x)
+            installBtn.style.display = 'none'; // Sembunyikan tombol lagi
+        });
+
+        // 4. Deteksi jika proses instalasi berhasil selesai
+        window.addEventListener('appinstalled', () => {
+            statusText.textContent = 'Aplikasi berhasil terpasang! 🎉';
+        });
     </script>
 </body>
 </html>
