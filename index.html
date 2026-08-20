@@ -1,1 +1,32 @@
-<h1>This is the wrong poc address bar</h1>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Pertamaku</title>
+    <!-- Menghubungkan ke Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f4f4f9; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Halo! Ini PWA Buatan Saya 🎉</h1>
+        <p>Jika syarat terpenuhi, tombol instal akan muncul di browser Anda.</p>
+        <button onclick="alert('PWA Berjalan!')">Klik Saya</button>
+    </div>
+
+    <!-- Mendaftarkan Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker Terdaftar!'))
+                .catch(err => console.log('Pendaftaran Gagal:', err));
+        }
+    </script>
+</body>
+</html>
