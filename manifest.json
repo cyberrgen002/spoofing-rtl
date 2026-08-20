@@ -20,19 +20,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "https://unsplash.com",
-      "sizes": "640x1136",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "https://unsplash.com",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
   ]
 }
